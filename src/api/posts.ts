@@ -1,6 +1,6 @@
 import axios from 'axios';
 import { ENDPOINT_POSTS } from '../constants';
-import { Post, Posts } from '../types';
+import { CurrentPost, Post, Posts } from '../types';
 
 export const getPosts = async () => {
   const res = await axios.get<Posts>(ENDPOINT_POSTS);
@@ -8,8 +8,19 @@ export const getPosts = async () => {
 };
 
 export const getPost = async (id: number) => {
-  const res = await axios.get<Post>(`http://localhost:3000/posts/${id}`);
+  const res = await axios.get<Post>(`${ENDPOINT_POSTS}/${id}`);
   return res.data;
+};
+
+export const createPost = async (currentPost: CurrentPost) => {
+  const { body, title } = currentPost ?? { body: '', title: '' };
+  const res = await axios.post<Post>(ENDPOINT_POSTS, {
+    title,
+    body,
+    userId: 1,
+    id: Date.now(),
+  });
+  return res;
 };
 
 // export const getPostsPaginated = async (page) => {
@@ -26,14 +37,3 @@ export const getPost = async (id: number) => {
 //       };
 //     });
 // };
-
-// export function createPost({ title, body }) {
-//   return axios
-//     .post('http://localhost:3000/posts', {
-//       title,
-//       body,
-//       userId: 1,
-//       id: Date.now(),
-//     })
-//     .then((res) => res.data);
-// }

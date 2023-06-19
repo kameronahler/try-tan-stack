@@ -1,72 +1,46 @@
-import { useQuery } from '@tanstack/react-query';
-import { useState } from 'react';
+import { useIsFetching, useIsMutating, useQuery } from '@tanstack/react-query';
+import Form from './Form';
 import { getPosts } from './api/posts';
+import { KEY_POSTS } from './constants';
 import { PostsListProps } from './types';
-
-const KEY_POSTS = 'posts';
 
 const PostsList = ({ setCurrentPost }: PostsListProps) => {
   const postsQuery = useQuery({
     queryKey: [KEY_POSTS],
-    queryFn: getPosts,
+    queryFn: () => getPosts(),
   });
-
-  const [newTitle, setNewTitle] = useState('');
-  const [newBody, setNewBody] = useState('');
+  const isMutating = useIsMutating({ mutationKey: [KEY_POSTS] });
+  const isFetching = useIsFetching({ queryKey: [KEY_POSTS] });
+  const isWaiting = isMutating !== 0 || isFetching !== 0;
 
   return (
     <>
       <header>
         <h1>
-          {postsQuery.isLoading && 'Loading'}
+          {isWaiting ? 'Loading...' : 'Posts'}
           {postsQuery.isError && `Error: ${JSON.stringify(postsQuery.error)}`}
-          {postsQuery.isSuccess && 'Success'}
         </h1>
       </header>
+
       <section>
-        <h2>Posts:</h2>
-        <ol>
-          {postsQuery.isSuccess &&
-            postsQuery.data.map(({ body, id, title }) => (
-              <li key={id}>
-                <button onClick={() => setCurrentPost({ body, title })}>
-                  {title}
-                </button>
-              </li>
-            ))}
-        </ol>
+        {isWaiting && <h2>List</h2>}
+        {!isWaiting && (
+          <ol>
+            {postsQuery.isSuccess &&
+              postsQuery.data.map(({ body, id, title }) => (
+                <li key={id}>
+                  <button onClick={() => setCurrentPost({ body, title })}>
+                    {title}
+                  </button>
+                </li>
+              ))}
+          </ol>
+        )}
       </section>
+
       <section>
         <h2>Add new post:</h2>
-        <form onSubmit={(e) => e.preventDefault()}>
-          <div>
-            <label htmlFor="title">
-              Title:
-              <input
-                id="title"
-                type="text"
-                onChange={(e) => setNewTitle(e.currentTarget.value)}
-                value={newTitle}
-              />
-            </label>
-          </div>
-          <div>
-            <label htmlFor="body">
-              Body:
-              <textarea
-                id="body"
-                onChange={(e) => setNewBody(e.currentTarget.value)}
-                value={newBody}
-              />
-            </label>
-          </div>
-          <button
-            onClick={() => window.alert(`${newTitle}, ${newBody}`)}
-            disabled={!newBody || !newTitle}
-          >
-            Submit
-          </button>
-        </form>
+        <Form />
       </section>
     </>
   );
